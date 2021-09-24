@@ -101,7 +101,7 @@ customStatus_e customProcessor(txContext_t *context) {
 
         // Sanity check
         if ((context->currentFieldLength - fieldPos) < blockSize) {
-            PRINTF("Unconsistent data\n");
+            PRINTF("Inconsistent data\n");
             return CUSTOM_FAULT;
         }
 
