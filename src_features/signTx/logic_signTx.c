@@ -101,7 +101,10 @@ customStatus_e customProcessor(txContext_t *context) {
 
         // Sanity check
         if ((context->currentFieldLength - fieldPos) < blockSize) {
-            PRINTF("Inconsistent data\n");
+            PRINTF("Inconsistent data: currentFieldLength: %d, fieldPos: %d, blockSize: %d\n",
+                   context->currentFieldLength,
+                   fieldPos,
+                   blockSize);
             return CUSTOM_FAULT;
         }
 
@@ -114,6 +117,7 @@ customStatus_e customProcessor(txContext_t *context) {
                    copySize);
 
         if (context->currentFieldPos == context->currentFieldLength) {
+            PRINTF("\n\nIncrementing one\n");
             context->currentField++;
             context->processingField = false;
         }
@@ -302,7 +306,6 @@ void finalizeParsing(bool direct) {
 
     // Verify the chain
     if (chainConfig->chainId != ETHEREUM_MAINNET_CHAINID) {
-        // TODO: Could we remove above check?
         uint64_t id = get_chain_id();
 
         if (chainConfig->chainId != id) {
@@ -344,16 +347,16 @@ void finalizeParsing(bool direct) {
         if ((pluginFinalize.tokenLookup1 != NULL) || (pluginFinalize.tokenLookup2 != NULL)) {
             if (pluginFinalize.tokenLookup1 != NULL) {
                 PRINTF("Lookup1: %.*H\n", ADDRESS_LENGTH, pluginFinalize.tokenLookup1);
-                pluginProvideToken.token1 = getKnownToken(pluginFinalize.tokenLookup1);
-                if (pluginProvideToken.token1 != NULL) {
-                    PRINTF("Token1 ticker: %s\n", pluginProvideToken.token1->ticker);
+                pluginProvideToken.item1 = getKnownToken(pluginFinalize.tokenLookup1);
+                if (pluginProvideToken.item1 != NULL) {
+                    PRINTF("Token1 ticker: %s\n", pluginProvideToken.item1->token.ticker);
                 }
             }
             if (pluginFinalize.tokenLookup2 != NULL) {
                 PRINTF("Lookup2: %.*H\n", ADDRESS_LENGTH, pluginFinalize.tokenLookup2);
-                pluginProvideToken.token2 = getKnownToken(pluginFinalize.tokenLookup2);
-                if (pluginProvideToken.token2 != NULL) {
-                    PRINTF("Token2 ticker: %s\n", pluginProvideToken.token2->ticker);
+                pluginProvideToken.item2 = getKnownToken(pluginFinalize.tokenLookup2);
+                if (pluginProvideToken.item2 != NULL) {
+                    PRINTF("Token2 ticker: %s\n", pluginProvideToken.item2->token.ticker);
                 }
             }
             if (eth_plugin_call(ETH_PLUGIN_PROVIDE_TOKEN, (void *) &pluginProvideToken) <=
@@ -390,9 +393,9 @@ void finalizeParsing(bool direct) {
                     tmpContent.txContent.value.length = 32;
                     memmove(tmpContent.txContent.destination, pluginFinalize.address, 20);
                     tmpContent.txContent.destinationLength = 20;
-                    if (pluginProvideToken.token1 != NULL) {
-                        decimals = pluginProvideToken.token1->decimals;
-                        ticker = pluginProvideToken.token1->ticker;
+                    if (pluginProvideToken.item1 != NULL) {
+                        decimals = pluginProvideToken.item1->token.decimals;
+                        ticker = pluginProvideToken.item1->token.ticker;
                     }
                     break;
                 default:
